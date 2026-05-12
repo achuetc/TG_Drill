@@ -6,7 +6,7 @@
     poiList, playerInventory, rollGacha,
     playerPosition, pendingEvent, revealHexesAround,
     saveHealthToInventory, playerConsumables, prestigeLevel, prestigeBonus,
-  } from './stores.js';
+  } from './stores/index.js';
   import MapCanvas from './MapCanvas.svelte';
 
   let selectedContract = null; let selectedPOI = null; let mineResult = null;  

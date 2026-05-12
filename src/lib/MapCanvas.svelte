@@ -9,7 +9,7 @@
     currentDay, rollGacha, playerInventory, playerMoney,
     triggerRandomEvent, pendingEvent, maintainContracts, playerLevel,
     playerVehicleId, vehicleData, maxMovementPoints
-  } from './stores.js';
+  } from './stores/index.js';
  
   const dispatch = createEventDispatcher();
   export let autoMove = false; 

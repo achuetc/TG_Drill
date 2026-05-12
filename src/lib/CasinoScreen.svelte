@@ -1,6 +1,6 @@
 <script>
   import { onDestroy } from 'svelte';
-  import { currentScreen, playerMoney } from './stores.js';
+  import { currentScreen, playerMoney } from './stores/index.js';
 
   // ── Game state ─────────────────────────────────────────────────────────────
   let phase        = 'bet';    // 'bet' | 'drilling' | 'result'
