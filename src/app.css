@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Philosopher:ital,wght@0,400;0,700;1,400&family=Cinzel+Decorative:wght@400;700&family=Courier+Prime:wght@400;700&family=Nunito:wght@700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+  background: #0d0a06;
+  overscroll-behavior: none;
+  font-family: 'Nunito', system-ui, sans-serif;
+}
+
+/* ── Design tokens ────────────────────────────────────────────────────── */
+:root {
+  --bg-root:    #0d0a06;
+  --bg-iron:    #0e0a05;
+  --bg-iron-md: #1e1408;
+  --bg-iron-lt: #302010;
+
+  --parch-lt:   #dcaa58;
+  --parch:      #c89040;
+  --parch-dk:   #9a6e22;
+
+  --txt:        #d4a840;
+  --txt-dim:    #7a5828;
+  --txt-bright: #f0c850;
+
+  --ink:        #1e1006;
+  --ink-lt:     #4a2e10;
+  --ink-md:     #5a3818;
+
+  --gold:       #d4a028;
+  --gold-lt:    #f0c048;
+  --amber:      #b86810;
+  --rust:       #a02c0c;
+  --rust-lt:    #c83820;
+  --moss:       #587028;
+  --ice:        #3a5880;
+  --ice-lt:     #5a80aa;
+
+  --rim:        #0e0a05;
+  --rim-md:     #2a1808;
+  --rim-lt:     #3e2c14;
+
+  --f-ui:       'Nunito', system-ui, sans-serif;
+  --f-deco:     'Cinzel Decorative', 'Philosopher', serif;
+  --f-num:      'Courier Prime', 'Courier New', monospace;
+
+  /* ── Cozy UI tokens ──────────────────────────────────────────── */
+  --ui-bg:        #f6f0df;
+  --ui-section:   #e8dec5;
+  --ui-ink:       #2a5c91;
+  --ui-ink-lt:    #4a7db5;
+  --ui-ink-dk:    #1a3c61;
+  --ui-green:     #82c91e;
+  --ui-green-dk:  #5a9010;
+  --ui-warm:      #f0a030;
+  --ui-warm-dk:   #b07020;
+  --ui-red:       #e05030;
+  --ui-red-dk:    #a02010;
+  --ui-radius:    16px;
+  --ui-radius-sm: 12px;
+  --ui-card-shadow: 0 8px 32px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.12);
+
+  /* ── Texture & composite layers ─────────────────────────────── */
+  /* Paper grain — stronger base frequency, 15% opacity */
+  --parch-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+  /* Vignette overlay — darken edges of parchment cards */
+  --parch-vignette: radial-gradient(ellipse at 50% 50%, transparent 38%, rgba(0,0,0,.52) 100%);
+  /* Metal gradient — highlight at top, deep shadow at bottom */
+  --metal-grad: linear-gradient(180deg, #201808 0%, #0d0805 45%, #171006 100%);
+  /* Bevel shadow for metal frames */
+  --bevel-out:
+    inset 2px 2px 0 rgba(255,255,255,.07),
+    inset -2px -2px 0 rgba(0,0,0,.55),
+    0 5px 20px rgba(0,0,0,.92);
+}
+
+/* ── Shared rivet dots — pseudo-3D dome ──────────────────────────────── */
+.rv {
+  position: absolute;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #9a6e30 0%, #5a3c18 38%, #2a1a08 68%, #0a0603 100%);
+  border: 1px solid #040201;
+  box-shadow:
+    0 2px 5px rgba(0,0,0,.95),          /* cast shadow */
+    inset 0 1px 3px rgba(255,210,90,.26),/* dome highlight */
+    inset 0 -1px 2px rgba(0,0,0,.65);   /* dome shadow */
+  pointer-events: none;
+  z-index: 4;
+}
+.rv.tl { top:  9px; left:  9px; }
+.rv.tr { top:  9px; right: 9px; }
+.rv.bl { bottom: 9px; left:  9px; }
+.rv.br { bottom: 9px; right: 9px; }
+
+/* ── Mobile (Telegram Mini App / PWA) ────────────────────────────── */
+@media (max-width: 768px) {
+  /* 44px minimum touch target for all buttons */
+  button { min-height: 44px !important; }
+
+  /* Safe-area insets for notched devices */
+  body { padding-bottom: env(safe-area-inset-bottom); }
+}
