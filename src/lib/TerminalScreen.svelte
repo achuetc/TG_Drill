@@ -14,7 +14,7 @@
     consumablesData, playerConsumables, activeEffects, activeIncident,
     prestigeLevel, prestigeBonus, doPrestige,
     DRILL_CLASSES, equippedDrillClass,
-  } from './stores.js';
+  } from './stores/index.js';
 
   const consItems = Object.values(consumablesData);
 

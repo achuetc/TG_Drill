@@ -1,7 +1,7 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { Application, Graphics, Container, TilingSprite, RenderTexture } from 'pixi.js';
-  import { currentLayer, isDrilling, activeEffects, activeIncident, currentDepth, boreholeLayers, deployStatus } from './stores.js';
+  import { currentLayer, isDrilling, activeEffects, activeIncident, currentDepth, boreholeLayers, deployStatus } from './stores/index.js';
 
   export let drillType = 'auger';
 

@@ -2,28 +2,49 @@
   import {
     currentScreen, playerMoney, drillHealth, playerInventory, equippedBitInstanceId,
     equippedItem, equippedBit, drillBitsData, getRepairCost, equipFromInventory,
-    consumablesData, playerConsumables, playerOwnedVehicles, playerVehicleId, vehicleData
-  } from './stores.js';
+    consumablesData, playerConsumables, playerOwnedVehicles, playerVehicleId, vehicleData,
+    fuelTank, maxFuelTank, refuel,
+    purchasedUpgrades, purchaseUpgrade, confirmUpgradePurchase, upgradeBonuses, baseUpgradesData
+  } from './stores/index.js';
+  import * as audio from './audio.js';
 
-  let currentTab = 'vehicles'; // 'vehicles', 'bits', 'repair'
+  let currentTab = 'vehicles'; // 'vehicles', 'bits', 'repair', 'upgrades'
 
-  $: repairCost = getRepairCost($drillHealth, $equippedBit);
+  $: repairCost = getRepairCost($drillHealth, $equippedBit, $upgradeBonuses.repairDiscount);
   $: canRepair  = $drillHealth < 100 && $playerMoney >= repairCost;
+  $: fuelPrice = Math.floor(800 * (1 - $upgradeBonuses.fuelDiscount));
 
   function repair() {
     if ($drillHealth >= 100 || $playerMoney < repairCost) return;
-    playerMoney.update(m => m - repairCost); drillHealth.set(100);
+    playerMoney.update(m => m - repairCost); 
+    drillHealth.set(100);
     playerInventory.update(inv => inv.map(i => i.instanceId === $equippedBitInstanceId ? { ...i, health: 100 } : i));
+    audio.playCash();
   }
 
   function buyConsumable(id, price) {
-    if ($playerMoney >= price) { playerMoney.update(m => m - price); playerConsumables.update(c => ({ ...c, [id]: (c[id] || 0) + 1 })); }
+    if ($playerMoney >= price) { 
+      playerMoney.update(m => m - price); 
+      playerConsumables.update(c => ({ ...c, [id]: (c[id] || 0) + 1 }));
+      audio.playCash();
+    }
+  }
+
+  function buyFuel(amount, price) {
+    if ($playerMoney >= price) {
+      playerMoney.update(m => m - price);
+      refuel(amount);
+      audio.playCash();
+    }
   }
 
   function buyVehicle(vid) {
     const v = vehicleData[vid];
     if ($playerOwnedVehicles.includes(vid) || $playerMoney < v.price) return;
-    playerMoney.update(m => m - v.price); playerOwnedVehicles.update(ov => [...ov, vid]); playerVehicleId.set(vid);
+    playerMoney.update(m => m - v.price); 
+    playerOwnedVehicles.update(ov => [...ov, vid]); 
+    playerVehicleId.set(vid);
+    audio.playCash();
   }
 
   function buyBit(bitId) {
@@ -33,6 +54,22 @@
     const newId = `bit_${Date.now()}`;
     playerInventory.update(inv => [...inv, { instanceId: newId, bitId, health: 100 }]);
     equipFromInventory(newId);
+    audio.playCash();
+  }
+
+  function buyUpgrade(upgradeId) {
+    const result = purchaseUpgrade(upgradeId);
+    if (!result.success) return;
+    if ($playerMoney >= result.price) {
+      playerMoney.update(m => m - result.price);
+      confirmUpgradePurchase(upgradeId);
+      audio.playCash();
+    }
+  }
+
+  function canBuyUpgrade(upgradeId) {
+    const result = purchaseUpgrade(upgradeId);
+    return result.success && $playerMoney >= result.price;
   }
 
   const fmt = (n) => n.toLocaleString('ru-RU');
@@ -46,6 +83,7 @@
     <button class:active={currentTab === 'vehicles'} on:click={() => currentTab = 'vehicles'}>ТЕХНИКА</button>
     <button class:active={currentTab === 'bits'} on:click={() => currentTab = 'bits'}>БУРЫ</button>
     <button class:active={currentTab === 'repair'} on:click={() => currentTab = 'repair'}>ОБСЛУЖИВАНИЕ</button>
+    <button class:active={currentTab === 'upgrades'} on:click={() => currentTab = 'upgrades'}>УЛУЧШЕНИЯ БАЗЫ</button>
   </nav>
 
   <div class="content">
@@ -84,7 +122,7 @@
         {/each}
       </div>
 
-    {:else}
+    {:else if currentTab === 'repair'}
       <div class="repair-block">
         <div class="r-title">ТЕКУЩИЙ БУР: {$equippedBit?.name || 'Нет'}</div>
         <div class="r-bar-bg"><div class="r-bar-fg" style="width: {$drillHealth}%" class:critical={$drillHealth < 30}></div></div>
@@ -93,12 +131,61 @@
           {#if $drillHealth >= 100} ОБОРУДОВАНИЕ В НОРМЕ {:else} ПОЧИНИТЬ ЗА {fmt(repairCost)} ₽ {/if}
         </button>
       </div>
+      
+      <!-- Топливная система -->
+      <div class="fuel-block">
+        <div class="r-title">ТОПЛИВНЫЙ БАК</div>
+        <div class="r-bar-bg"><div class="r-bar-fg fuel-fg" style="width: {($fuelTank / $maxFuelTank) * 100}%"></div></div>
+        <div class="r-status">{$fuelTank.toFixed(0)} / {$maxFuelTank} Л</div>
+        <div class="fuel-row">
+          <button class="btn-buy" class:disabled={$playerMoney < fuelPrice} on:click={() => buyFuel(20, fuelPrice)}>
+            +20Л ({fmt(fuelPrice)} ₽)
+          </button>
+          <button class="btn-buy" class:disabled={$playerMoney < fuelPrice * 5} on:click={() => buyFuel(100, fuelPrice * 5)}>
+            +100Л ({fmt(fuelPrice * 5)} ₽)
+          </button>
+        </div>
+      </div>
+      
       <div class="section-title" style="margin-top:20px;">РАСХОДНИКИ</div>
       <div class="list">
         {#each Object.entries(consumablesData) as [id, c]}
-          <div class="item-card">
-            <div class="v-info"><div class="v-name">{c.name}</div><div class="v-desc">{c.desc}</div></div>
-            <div class="c-right"><span class="c-qty">В наличии: {$playerConsumables[id] || 0}</span><button class="btn-buy" class:disabled={$playerMoney < c.price} on:click={() => buyConsumable(id, c.price)}>{fmt(c.price)} ₽</button></div>
+          {#if id !== 'fuel'}
+            <div class="item-card">
+              <div class="v-info"><div class="v-name">{c.name}</div><div class="v-desc">{c.desc}</div></div>
+              <div class="c-right"><span class="c-qty">В наличии: {$playerConsumables[id] || 0}</span><button class="btn-buy" class:disabled={$playerMoney < c.price} on:click={() => buyConsumable(id, c.price)}>{fmt(c.price)} ₽</button></div>
+            </div>
+          {/if}
+        {/each}
+      </div>
+
+    {:else if currentTab === 'upgrades'}
+      <div class="section-title">УЛУЧШЕНИЯ БАЗЫ</div>
+      <div class="bonuses-display">
+        <div class="bonus-item">🔧 Ремонт: -{Math.round($upgradeBonuses.repairDiscount * 100)}%</div>
+        <div class="bonus-item">📦 Контракты: +{Math.round($upgradeBonuses.contractBonus * 100)}%</div>
+        <div class="bonus-item">⛽ Топливо: -{Math.round($upgradeBonuses.fuelDiscount * 100)}%</div>
+      </div>
+      <div class="list">
+        {#each Object.values(baseUpgradesData) as u}
+          {@const purchased = $purchasedUpgrades.has(u.id)}
+          {@const canBuy = !purchased && (!u.requires || $purchasedUpgrades.has(u.requires)) && $playerMoney >= u.price}
+          {@const locked = u.requires && !$purchasedUpgrades.has(u.requires)}
+          <div class="item-card upgrade-card" class:purchased class:locked>
+            <div class="v-info">
+              <div class="v-name">{u.name} {#if purchased}<span class="purchased-badge">КУПЛЕНО</span>{/if}</div>
+              <div class="v-desc">{u.desc}</div>
+              {#if u.requires}
+                <div class="v-req">Требуется: {baseUpgradesData[u.requires]?.name}</div>
+              {/if}
+            </div>
+            {#if purchased}
+              <button class="btn-equip active" disabled>АКТИВНО</button>
+            {:else}
+              <button class="btn-buy" class:disabled={!canBuy} on:click={() => buyUpgrade(u.id)}>
+                {fmt(u.price)} ₽
+              </button>
+            {/if}
           </div>
         {/each}
       </div>
@@ -132,4 +219,14 @@
   .r-bar-fg { height: 100%; background: var(--ui-green); transition: width 0.3s; } .r-bar-fg.critical { background: var(--ui-red); }
   .r-status { font-size: 10px; font-weight: 700; color: var(--ui-ink-lt); margin-bottom: 12px; }
   .btn-repair { width: 100%; padding: 12px; background: var(--ui-green); color: #fff; font-weight: 800; border: none; border-bottom: 4px solid var(--ui-green-dk); border-radius: 4px; cursor: pointer; } .btn-repair.disabled { background: rgba(0,0,0,.2); border-color: rgba(0,0,0,.1); color: rgba(255,255,255,.5); cursor: not-allowed; }
+  .fuel-block { margin-top: 16px; background: rgba(230,126,34,.05); border: 1px solid rgba(230,126,34,.2); padding: 16px; border-radius: 6px; text-align: center; }
+  .fuel-fg { background: var(--ui-warm); }
+  .fuel-row { display: flex; gap: 8px; justify-content: center; margin-top: 10px; }
+  .bonuses-display { display: flex; gap: 10px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .bonus-item { background: rgba(42,92,145,.1); padding: 8px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; color: var(--ui-ink-dk); }
+  .upgrade-card { position: relative; }
+  .upgrade-card.purchased { border-color: rgba(130,201,30,.4); background: rgba(130,201,30,.05); }
+  .upgrade-card.locked { opacity: 0.5; }
+  .purchased-badge { background: var(--ui-green); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 9px; margin-left: 8px; }
+  .v-req { font-size: 9px; color: var(--ui-red); font-weight: 700; }
 </style>
