@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte';
-  import { currentScreen } from './lib/stores.js';
+  import { currentScreen } from './lib/stores/index.js';
   import ContractsScreen from './lib/ContractsScreen.svelte';
   import TerminalScreen  from './lib/TerminalScreen.svelte';
   import GarageScreen    from './lib/GarageScreen.svelte';
