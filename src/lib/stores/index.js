@@ -8,7 +8,8 @@ export {
   DRILL_CLASSES,
   equippedDrillClass,
   GACHA_PRICE,
-  baseUpgradesData
+  baseUpgradesData,
+  generateBorehole
 } from './soilData.js';
 
 export {
@@ -78,7 +79,6 @@ export {
   contractTargetDepth,
   contractProgress,
   currentLayer,
-  generateBorehole,
   calculateDrilling,
   triggerIncident,
   resolveIncident,

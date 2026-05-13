@@ -1,9 +1,6 @@
-// stores/mapStore.js - Карта, перемещение, контракты, события
 import { writable, derived, get } from 'svelte/store';
-import { playerVehicleId, fuelTank, consumeFuel } from './playerStore.js';
-import { vehicleData, regions } from './soilData.js';
-import { generateBorehole } from './drillStore.js';
-import { playerLevel } from './playerStore.js';
+import { playerVehicleId, fuelTank, consumeFuel, playerLevel } from './playerStore.js';
+import { vehicleData, regions, generateBorehole } from './soilData.js';
 
 export const playerPosition = writable(null);
 export const revealedHexes = writable(new Set());
@@ -12,6 +9,7 @@ export const currentDay = writable(1);
 
 export const currentScreen = writable('contracts');
 export const activeContract = writable(null);
+export const contractTargetDepth = derived(activeContract, $c => $c ? $c.targetDepth : 0);
 export const completedContracts = writable(new Set());
 export const failedContracts = writable(new Set());
 

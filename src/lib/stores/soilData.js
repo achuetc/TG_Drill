@@ -52,3 +52,25 @@ export const baseUpgradesData = {
   'fuel_storage_l1': { id: 'fuel_storage_l1', name: 'Топливный склад I', desc: '-15% цена топлива', price: 40000, effect: { fuelDiscount: 0.15 } },
   'fuel_storage_l2': { id: 'fuel_storage_l2', name: 'Топливный склад II', desc: '-30% цена топлива', price: 90000, effect: { fuelDiscount: 0.30 }, requires: 'fuel_storage_l1' },
 };
+export function generateBorehole(targetDepth, regionId, playerLevel = 1) {
+  const layers = [];
+  if (regionId === 'north') {
+    const thawed = +(1.0 + Math.random() * 1.0).toFixed(1);
+    const frozenTo = +(targetDepth - thawed).toFixed(1);
+    layers.push({ from: 0, to: frozenTo, soilId: 'frozen_sand' });
+    layers.push({ from: frozenTo, to: targetDepth, soilId: 'fine_sand' });
+  } else {
+    if (playerLevel < 3) {
+      const cut1 = +(targetDepth * (0.4 + Math.random() * 0.2)).toFixed(1);
+      layers.push({ from: 0, to: cut1, soilId: 'soft_loam' });
+      layers.push({ from: cut1, to: targetDepth, soilId: 'fine_sand' });
+    } else {
+      const cut1 = +(targetDepth * (0.20 + Math.random() * 0.15)).toFixed(1);
+      const cut2 = +(targetDepth * (0.45 + Math.random() * 0.20)).toFixed(1);
+      layers.push({ from: 0, to: cut1, soilId: 'soft_loam' });
+      layers.push({ from: cut1, to: cut2, soilId: 'fine_sand' });
+      layers.push({ from: cut2, to: targetDepth, soilId: 'granite' });
+    }
+  }
+  return layers;
+}
