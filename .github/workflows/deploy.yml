@@ -35,15 +35,19 @@ jobs:
 
       - name: Build project
         run: npm run build
+        # ВАЖНО: Если сборка упадет, workflow остановится здесь, и мы увидим ошибку
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
+      - name: Debug: Check dist folder
+        run: |
+          echo "Checking dist folder..."
+          ls -la ./dist
+          if [ ! -f "./dist/index.html" ]; then
+            echo "ERROR: index.html not found in dist!"
+            exit 1
+          fi
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          path: './dist'
