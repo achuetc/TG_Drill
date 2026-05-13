@@ -1,14 +1,18 @@
 <script>
   import { onMount } from 'svelte';
   import { currentScreen } from './lib/stores/index.js';
+  
+  // Импорт всех экранов
   import ContractsScreen from './lib/ContractsScreen.svelte';
   import TerminalScreen  from './lib/TerminalScreen.svelte';
   import GarageScreen    from './lib/GarageScreen.svelte';
   import CasinoScreen    from './lib/CasinoScreen.svelte';
+  import MapCanvas       from './lib/MapCanvas.svelte';
+  import DrillCanvas     from './lib/DrillCanvas.svelte';
+  
   import { init, playClick } from './lib/audio.js';
 
   onMount(() => {
-    // First user gesture unblocks AudioContext; button clicks play UI tick.
     function onDocClick(e) {
       init();
       if (e.target.closest('button')) playClick();
@@ -18,7 +22,9 @@
   });
 </script>
 
-{#if $currentScreen === 'terminal'}
+{#if $currentScreen === 'map'}
+  <MapCanvas />
+{:else if $currentScreen === 'terminal'}
   <TerminalScreen />
 {:else if $currentScreen === 'garage'}
   <GarageScreen />
